@@ -112,7 +112,8 @@ private enum class IntegrationSettingsSection {
     Tmdb,
     MdbList,
     AnimeSkip,
-    ServerAssist
+    ServerAssist,
+    Stremio
 }
 
 internal enum class SettingsSectionDestination {
@@ -308,6 +309,7 @@ fun SettingsScreen(
     val integrationMdbListFocusRequester = remember { FocusRequester() }
     val integrationAnimeSkipFocusRequester = remember { FocusRequester() }
     val integrationServerAssistFocusRequester = remember { FocusRequester() }
+    val integrationStremioFocusRequester = remember { FocusRequester() }
     var integrationSection by remember { mutableStateOf(IntegrationSettingsSection.Hub) }
     var pendingContentFocusCategory by remember { mutableStateOf<SettingsCategory?>(null) }
     var pendingContentFocusRequestId by remember { mutableLongStateOf(0L) }
@@ -536,6 +538,7 @@ fun SettingsScreen(
                                 integrationMdbListFocusRequester = integrationMdbListFocusRequester,
                                 integrationAnimeSkipFocusRequester = integrationAnimeSkipFocusRequester,
                                 integrationServerAssistFocusRequester = integrationServerAssistFocusRequester,
+                                integrationStremioFocusRequester = integrationStremioFocusRequester,
                                 onNavigateToManageProfiles = onNavigateToManageProfiles,
                                 onNavigateToAddons = onNavigateToAddons,
                                 onNavigateToPlugins = onNavigateToPlugins,
@@ -688,6 +691,7 @@ fun SettingsScreen(
                         integrationMdbListFocusRequester = integrationMdbListFocusRequester,
                         integrationAnimeSkipFocusRequester = integrationAnimeSkipFocusRequester,
                         integrationServerAssistFocusRequester = integrationServerAssistFocusRequester,
+                        integrationStremioFocusRequester = integrationStremioFocusRequester,
                         onNavigateToManageProfiles = onNavigateToManageProfiles,
                         onNavigateToAddons = onNavigateToAddons,
                         onNavigateToPlugins = onNavigateToPlugins,
@@ -717,6 +721,7 @@ private fun SettingsDetailPane(
     integrationMdbListFocusRequester: FocusRequester,
     integrationAnimeSkipFocusRequester: FocusRequester,
     integrationServerAssistFocusRequester: FocusRequester,
+    integrationStremioFocusRequester: FocusRequester,
     onNavigateToManageProfiles: () -> Unit,
     onNavigateToAddons: () -> Unit,
     onNavigateToPlugins: () -> Unit,
@@ -806,6 +811,7 @@ private fun SettingsDetailPane(
             mdbListFocusRequester = integrationMdbListFocusRequester,
             animeSkipFocusRequester = integrationAnimeSkipFocusRequester,
             serverAssistFocusRequester = integrationServerAssistFocusRequester,
+            stremioFocusRequester = integrationStremioFocusRequester,
             autoFocusEnabled = allowDetailAutofocus
         )
         SettingsCategory.ABOUT -> AboutSettingsContent(
@@ -960,6 +966,7 @@ private fun IntegrationSettingsContent(
     mdbListFocusRequester: FocusRequester,
     animeSkipFocusRequester: FocusRequester,
     serverAssistFocusRequester: FocusRequester,
+    stremioFocusRequester: FocusRequester,
     autoFocusEnabled: Boolean
 ) {
     BackHandler(enabled = selectedSection != IntegrationSettingsSection.Hub) {
@@ -976,6 +983,7 @@ private fun IntegrationSettingsContent(
             IntegrationSettingsSection.MdbList -> mdbListFocusRequester
             IntegrationSettingsSection.AnimeSkip -> animeSkipFocusRequester
             IntegrationSettingsSection.ServerAssist -> serverAssistFocusRequester
+            IntegrationSettingsSection.Stremio -> stremioFocusRequester
         }
         runCatching { requester.requestFocus() }
     }
@@ -1031,6 +1039,13 @@ private fun IntegrationSettingsContent(
                                     onClick = { onSelectSection(IntegrationSettingsSection.AnimeSkip) }
                                 )
                             }
+                            item(key = "integration_hub_stremio") {
+                                SettingsActionRow(
+                                    title = stringResource(R.string.stremio_account_title),
+                                    subtitle = stringResource(R.string.stremio_account_subtitle),
+                                    onClick = { onSelectSection(IntegrationSettingsSection.Stremio) }
+                                )
+                            }
                             item(key = "integration_hub_server_assist") {
                                 SettingsActionRow(
                                     title = stringResource(R.string.server_assist_title),
@@ -1072,6 +1087,12 @@ private fun IntegrationSettingsContent(
         IntegrationSettingsSection.ServerAssist -> {
             ServerAssistSettingsContent(
                 initialFocusRequester = serverAssistFocusRequester
+            )
+        }
+
+        IntegrationSettingsSection.Stremio -> {
+            StremioAccountSettingsContent(
+                initialFocusRequester = stremioFocusRequester
             )
         }
     }

@@ -47,7 +47,9 @@ MainActivity / Compose navigation
 
 ### Account state
 
-Current sync is Nuvio account/Supabase oriented, with separate Trakt and Simkl integrations. There is no `StremioSyncProvider` abstraction for importing an existing Stremio account as specified. The new provider must coexist with current providers rather than replacing them.
+Nuvio account/Supabase sync remains intact alongside Trakt and Simkl. A separate Stremio account adapter now imports the authenticated user's ordered addon collection into the existing profile-scoped addon repository.
+
+Stremio login and addon collection calls run directly from Android through a dedicated TLS-verifying OkHttp client. They are intentionally not proxied through the companion: these calls are low-volume, while relaying credentials over another process would expand the secret-handling boundary without a performance benefit. The password is never persisted. The returned Stremio auth key and account email are encrypted together with an Android Keystore AES-GCM key and scoped to the active Nuvio profile.
 
 ### Playback
 
@@ -146,8 +148,8 @@ The first server milestone will implement only configuration, Tailscale-only bin
 
 ### Existing issues to remove during integration
 
-- The shared Android OkHttp client currently trusts every TLS certificate and hostname. The server gateway must not inherit this behavior, and the global client should be repaired under focused regression coverage.
-- Addon and catalog logging currently includes complete configured URLs, which may reveal embedded credentials. Logging must use a centralized redactor.
+- The shared Android OkHttp client currently trusts every TLS certificate and hostname. Neither the server gateway nor Stremio account adapter inherits this behavior; the global client still needs focused regression coverage before it can be repaired safely.
+- Configured addon URLs are treated as secrets. Manifest, catalog, metadata, stream, and subtitle repository logs omit complete URLs so configured paths and query tokens are not exposed.
 
 ## Data freshness model
 

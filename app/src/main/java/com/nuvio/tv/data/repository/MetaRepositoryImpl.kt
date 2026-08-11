@@ -134,7 +134,7 @@ class MetaRepositoryImpl @Inject constructor(
                 } catch (e: kotlinx.coroutines.CancellationException) {
                     throw e
                 } catch (e: Exception) {
-                    Log.w(TAG, "getMeta failed for $url: ${e.message}")
+                    Log.w(TAG, "getMeta failed type=$type id=$id: ${e.message}")
                     null
                 } finally {
                     inFlightMeta.remove(cacheKey)
@@ -301,7 +301,7 @@ class MetaRepositoryImpl @Inject constructor(
                         }
 
                         val url = buildMetaUrl(addon.baseUrl, candidateType, id)
-                        Log.d(TAG, "Trying meta addonId=${addon.id} addonName=${addon.name} type=$candidateType id=$id url=$url")
+                        Log.d(TAG, "Trying meta addonId=${addon.id} addonName=${addon.name} type=$candidateType id=$id")
                         try {
                             val response = api.getMeta(url)
                             if (response.isSuccessful) {
@@ -386,7 +386,7 @@ class MetaRepositoryImpl @Inject constructor(
         val url = buildMetaUrl(addon.baseUrl, candidateType, id)
         Log.d(
             TAG,
-            "Trying primary meta addonId=${addon.id} addonName=${addon.name} type=$candidateType id=$id url=$url"
+            "Trying primary meta addonId=${addon.id} addonName=${addon.name} type=$candidateType id=$id"
         )
 
         val deferred = inFlightPrimaryMeta.getOrPut(cacheKey) {
@@ -407,7 +407,7 @@ class MetaRepositoryImpl @Inject constructor(
                 } catch (e: kotlinx.coroutines.CancellationException) {
                     throw e
                 } catch (e: Exception) {
-                    Log.w(TAG, "Primary meta fetch failed for $url: ${e.message}")
+                    Log.w(TAG, "Primary meta fetch failed addonId=${addon.id} type=$candidateType id=$id: ${e.message}")
                     null
                 } finally {
                     inFlightPrimaryMeta.remove(cacheKey)

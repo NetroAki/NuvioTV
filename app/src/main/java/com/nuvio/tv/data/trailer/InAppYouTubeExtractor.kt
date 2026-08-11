@@ -246,7 +246,7 @@ class InAppYouTubeExtractor @Inject constructor() {
         } catch (e: kotlinx.coroutines.CancellationException) {
             throw e
         } catch (error: Exception) {
-            Log.w(TAG, "Kotlin extractor failed for $youtubeUrl: ${error.message}")
+            Log.w(TAG, "Kotlin extractor failed for ${summarizeUrl(youtubeUrl)}: ${error.message}")
         }
 
         // Retry with fresh config if first attempt returned nothing
@@ -259,7 +259,7 @@ class InAppYouTubeExtractor @Inject constructor() {
             } catch (e: kotlinx.coroutines.CancellationException) {
                 throw e
             } catch (error: Exception) {
-                Log.w(TAG, "Kotlin extractor retry failed for $youtubeUrl: ${error.message}")
+                Log.w(TAG, "Kotlin extractor retry failed for ${summarizeUrl(youtubeUrl)}: ${error.message}")
             }
         }
 

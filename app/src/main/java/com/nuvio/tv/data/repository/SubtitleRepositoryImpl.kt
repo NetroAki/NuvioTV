@@ -184,7 +184,7 @@ class SubtitleRepositoryImpl @Inject constructor(
             "$basePath/subtitles/$encodedType/$encodedActualId.json$baseQuery"
         }
         
-        Log.d(TAG, "Fetching subtitles from ${addon.name}: $subtitleUrl")
+        Log.d(TAG, "Fetching subtitles from addon=${addon.name} type=$type id=$actualId")
         
         return try {
             when (val result = safeApiCall(context) { api.getSubtitles(subtitleUrl) }) {

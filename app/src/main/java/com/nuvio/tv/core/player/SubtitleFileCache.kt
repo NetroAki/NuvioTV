@@ -71,7 +71,7 @@ class SubtitleFileCache @Inject constructor(
         try {
             okHttpClient.newCall(request).execute().use { response ->
                 if (!response.isSuccessful) {
-                    Log.w(TAG, "HTTP ${response.code} downloading subtitle: ${input.url}")
+                    Log.w(TAG, "HTTP ${response.code} downloading subtitle")
                     return@withContext null
                 }
 
@@ -88,7 +88,7 @@ class SubtitleFileCache @Inject constructor(
                 file
             )
         } catch (e: Exception) {
-            Log.w(TAG, "Failed to download subtitle file: ${input.url}", e)
+            Log.w(TAG, "Failed to download subtitle file", e)
             file.delete()
             null
         }

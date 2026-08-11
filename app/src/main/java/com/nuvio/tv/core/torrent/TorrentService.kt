@@ -71,7 +71,7 @@ class TorrentService @Inject constructor(
 
         // Get stream URL — TorrServer handles all buffering/piece management
         val streamUrl = api.getStreamUrl(magnetLink, resolvedIdx)
-        Log.d(TAG, "Stream URL: $streamUrl")
+        Log.d(TAG, "Torrent stream URL resolved")
 
         // Start stats polling
         startStatsPolling(hash)

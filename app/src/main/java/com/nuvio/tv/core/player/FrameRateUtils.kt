@@ -1251,7 +1251,7 @@ object FrameRateUtils {
             }
         } catch (e: Exception) {
             call.cancel()
-            Log.w(TAG, "fetchHttpRangeToFile failed for url=$url range=$rangeHeader: ${e.message}")
+            Log.w(TAG, "fetchHttpRangeToFile failed range=$rangeHeader: ${e.message}")
             HttpRangeFetchResult(success = false)
         }
     }
