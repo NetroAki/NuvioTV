@@ -91,6 +91,7 @@ internal fun PlayerRuntimeController.rememberAudioSelection(trackIndex: Int) {
         message = "trackIndex=$trackIndex lang=${selectedTrack.language} name=${selectedTrack.name} id=${selectedTrack.trackId}"
     )
     val basePreference = currentTrackPreferenceForPersistence()
+    hasExplicitAudioPreferenceForPlayback = true
     clearPendingEngineSwitchTrackPreference()
     persistedTrackPreference = null
     rememberedTrackPreference =
@@ -99,7 +100,7 @@ internal fun PlayerRuntimeController.rememberAudioSelection(trackIndex: Int) {
                 audio = PlayerRuntimeController.RememberedTrackSelection(
                     language = selectedTrack.language,
                     name = selectedTrack.name,
-                    trackId = selectedTrack.trackId
+                    trackId = null
                 )
             )
     persistTrackPreference()
@@ -676,7 +677,8 @@ internal fun PlayerRuntimeController.persistTrackPreference() {
         addonSubtitleAddonName = (subtitle as? PlayerRuntimeController.RememberedSubtitleSelection.Addon)?.addonName,
         audioLanguage = audio?.language,
         audioName = audio?.name,
-        audioTrackId = audio?.trackId
+        // Audio IDs are container/engine-local and are not stable across episodes.
+        audioTrackId = null
     )
     scope.launch { trackPreferenceDataStore.save(id, persisted) }
     // Subtitle delay is keyed per-videoId (not per-contentId) because a delay

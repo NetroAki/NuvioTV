@@ -114,8 +114,18 @@ internal fun PlayerRuntimeController.updateAvailableTracks(tracks: Tracks) {
                         com.nuvio.tv.ui.util.languageCodeToName(it)
                     }
                     val baseName = format.label ?: langDisplay ?: context.getString(com.nuvio.tv.R.string.player_track_audio_fallback, audioTracks.size + 1)
+                    val semanticRole = when {
+                        (format.roleFlags and C.ROLE_FLAG_COMMENTARY) != 0 -> "Commentary"
+                        (format.roleFlags and C.ROLE_FLAG_DESCRIBES_VIDEO) != 0 -> "Audio Description"
+                        else -> null
+                    }
+                    val semanticName = if (semanticRole != null && !baseName.contains(semanticRole, ignoreCase = true)) {
+                        "$baseName — $semanticRole"
+                    } else {
+                        baseName
+                    }
                     val suffix = listOfNotNull(codecName, channelLayout).joinToString(" ")
-                    val displayName = if (suffix.isNotEmpty()) "$baseName ($suffix)" else baseName
+                    val displayName = if (suffix.isNotEmpty()) "$semanticName ($suffix)" else semanticName
 
                     audioTracks.add(
                         TrackInfo(
@@ -319,6 +329,7 @@ internal fun PlayerRuntimeController.updateAvailableTracks(tracks: Tracks) {
         audioTracks = audioTracks,
         subtitleTracks = subtitleTracks
     )
+    tryAutoSelectSemanticAudio(audioTracks)
     if (currentStreamHasVideoTrack) {
         maybeScheduleFirstFrameWatchdog()
     } else {
@@ -326,6 +337,32 @@ internal fun PlayerRuntimeController.updateAvailableTracks(tracks: Tracks) {
     }
     tryAutoSelectPreferredSubtitleFromAvailableTracks()
     maybeAdjustLibassPipelineForTracks(tracks)
+}
+
+internal fun PlayerRuntimeController.tryAutoSelectSemanticAudio(tracks: List<TrackInfo>) {
+    val hasRememberedAudio = hasExplicitAudioPreferenceForPlayback ||
+        rememberedTrackPreference?.audio != null ||
+        persistedTrackPreference?.audio != null ||
+        pendingEngineSwitchTrackPreference?.preference?.audio != null
+    if (hasRememberedAudio || tracks.isEmpty()) return
+
+    val settings = currentPlayerSettingsForReport
+    val languages = resolvePreferredAudioLanguages(
+        preferredAudioLanguage = settings.preferredAudioLanguage,
+        secondaryPreferredAudioLanguage = settings.secondaryPreferredAudioLanguage,
+        deviceLanguages = resolveDeviceAudioLanguages(),
+        contentOriginalLanguage = contentLanguage
+    )
+    val selected = tracks.firstOrNull { it.isSelected }
+    if (languages.isEmpty() && selected != null &&
+        !AudioTrackSelectionPolicy.isCommentary(selected) &&
+        !AudioTrackSelectionPolicy.isAudioDescription(selected)
+    ) return
+
+    val targetIndex = AudioTrackSelectionPolicy.select(tracks, AudioTrackPreference(languages)) ?: return
+    if (targetIndex == selected?.index) return
+    selectAudioTrack(targetIndex)
+    _uiState.update { state -> state.copy(selectedAudioTrackIndex = targetIndex) }
 }
 
 private fun formatSupportRank(@C.FormatSupport formatSupport: Int): Int {
@@ -561,6 +598,17 @@ internal fun PlayerRuntimeController.maybeRestorePendingAudioSelectionAfterSubti
     selectAudioTrack(index)
     return index
 }
+
+internal fun PlayerRuntimeController.findMatchingAudioTrackIndex(
+    tracks: List<TrackInfo>,
+    target: PlayerRuntimeController.RememberedTrackSelection
+): Int = AudioTrackSelectionPolicy.select(
+    tracks = tracks,
+    preference = AudioTrackPreference(
+        languages = listOfNotNull(target.language),
+        label = target.name
+    )
+) ?: -1
 
 internal fun PlayerRuntimeController.findMatchingTrackIndex(
     tracks: List<TrackInfo>,
@@ -940,7 +988,7 @@ internal fun PlayerRuntimeController.applyPersistedTrackPreference(
             )
             Log.d(PlayerRuntimeController.TAG, "TRACK_PREF restore: audio deferred (no tracks yet)")
         } else {
-            val index = findMatchingTrackIndex(audioTracks, audioSelection)
+            val index = findMatchingAudioTrackIndex(audioTracks, audioSelection)
             if (index >= 0) {
                 val alreadySelected = audioTracks.getOrNull(index)?.isSelected == true
                 logSwitchTrace(
