@@ -93,6 +93,7 @@ fun TrackingSettingsScreen(
         val connected = when (dismissOnConnected) {
             TrackingProviderId.TRAKT -> traktState.mode == TraktConnectionMode.CONNECTED
             TrackingProviderId.SIMKL -> simklState.mode == SimklConnectionMode.CONNECTED
+            TrackingProviderId.STREMIO -> false
             null -> false
         }
         if (activeProvider == dismissOnConnected && connected) {
@@ -118,10 +119,11 @@ fun TrackingSettingsScreen(
         restoreFocusTarget = null
     }
 
-    val openProvider: (TrackingProviderId) -> Unit = { provider ->
+    val openProvider: (TrackingProviderId) -> Unit = openProvider@{ provider ->
         restoreFocusTarget = when (provider) {
             TrackingProviderId.TRAKT -> TrackingFocusTarget.TRAKT
             TrackingProviderId.SIMKL -> TrackingFocusTarget.SIMKL
+            TrackingProviderId.STREMIO -> return@openProvider
         }
         activeProvider = provider
         disconnectProvider = null
@@ -146,6 +148,7 @@ fun TrackingSettingsScreen(
                     }
                 }
             }
+            TrackingProviderId.STREMIO -> Unit
         }
     }
 
@@ -223,6 +226,7 @@ fun TrackingSettingsScreen(
                 }
             )
         }
+        TrackingProviderId.STREMIO -> Unit
         null -> Unit
     }
 

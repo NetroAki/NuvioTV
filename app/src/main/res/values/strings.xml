@@ -2989,18 +2989,18 @@
     <string name="server_assist_dialog_placeholder">http://100.x.y.z:8765</string>
     <string name="server_assist_connect">Connect</string>
 
-    <!-- Stremio account import -->
+    <!-- Stremio account sync -->
     <string name="stremio_account_title">Stremio Account</string>
-    <string name="stremio_account_subtitle">Import your installed Stremio addons and preserve their priority order for this profile.</string>
+    <string name="stremio_account_subtitle">Sync your Stremio library, playback state, watched items, and installed addons with this profile.</string>
     <string name="stremio_account_connect">Connect Stremio Account</string>
     <string name="stremio_account_connect_subtitle">Sign in directly with Stremio. Your password is used once and is never saved.</string>
     <string name="stremio_account_connecting">Connecting…</string>
-    <string name="stremio_account_sync_now">Sync Addons Now</string>
-    <string name="stremio_account_sync_now_subtitle">Pull the latest addon URLs and order from your Stremio account.</string>
+    <string name="stremio_account_sync_now">Sync Stremio Now</string>
+    <string name="stremio_account_sync_now_subtitle">Reconcile library changes and pull playback state, watched items, addon URLs, and addon order.</string>
     <string name="stremio_account_disconnect">Disconnect Stremio Account</string>
-    <string name="stremio_account_disconnect_subtitle">Remove the encrypted session from this Nuvio profile. Imported addons remain available.</string>
+    <string name="stremio_account_disconnect_subtitle">Revoke and remove the encrypted session from this Nuvio profile. Synced local data remains available.</string>
     <string name="stremio_account_syncing">Syncing…</string>
-    <string name="stremio_account_sync_complete">%1$d addons imported</string>
+    <string name="stremio_account_sync_complete">%1$d addons · %2$d library changes · %3$d playback items</string>
     <string name="stremio_account_sync_error">Sync failed: %1$s</string>
     <string name="stremio_account_dialog_title">Connect Stremio</string>
     <string name="stremio_account_dialog_subtitle">Nuvio sends these credentials only to api.strem.io over verified HTTPS. Only the returned session key is encrypted and stored.</string>

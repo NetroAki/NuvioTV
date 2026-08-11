@@ -15,11 +15,20 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-class StremioAddonImporterTest {
+class StremioAccountSynchronizerTest {
     private val accountClient = mockk<StremioAccountClient>()
     private val sessionStore = mockk<StremioSessionStore>()
     private val addonRepository = mockk<AddonRepositoryImpl>()
-    private val importer = StremioAddonImporter(accountClient, sessionStore, addonRepository)
+    private val librarySync = mockk<StremioLibrarySync>()
+    private val playbackStateSync = mockk<StremioPlaybackStateSync>()
+    private val importer =
+        StremioAccountSynchronizer(
+            accountClient,
+            sessionStore,
+            addonRepository,
+            librarySync,
+            playbackStateSync,
+        )
 
     @Test
     fun `connect stores session and imports remote order`() =
@@ -31,11 +40,16 @@ class StremioAddonImporterTest {
             every { sessionStore.save(session, scope) } returns true
             coEvery { accountClient.login("viewer@example.com", "password") } returns Result.success(session)
             coEvery { accountClient.getAddonUrls("private-key") } returns Result.success(urls)
+            coEvery { accountClient.getLibraryItems("private-key") } returns Result.success(emptyList())
             coEvery { addonRepository.reconcileWithRemoteAddonUrls(urls, true) } returns Unit
+            coEvery { librarySync.reconcile("private-key", scope, emptyList()) } returns
+                StremioLibrarySyncResult(importedItems = 0, removedItems = 0, pushedChanges = 0)
+            coEvery { playbackStateSync.import(scope, emptyList()) } returns
+                StremioPlaybackStateSyncResult(importedProgress = 0, importedWatchedItems = 0)
 
             val result = importer.connectAndImport("viewer@example.com", "password").getOrThrow()
 
-            assertEquals(2, result.importedAddons)
+            assertEquals(2, result.addonCount)
             coVerify(exactly = 1) { addonRepository.reconcileWithRemoteAddonUrls(urls, true) }
         }
 

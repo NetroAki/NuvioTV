@@ -2,7 +2,7 @@ package com.nuvio.tv.ui.screens.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.nuvio.tv.core.sync.stremio.StremioAddonImporter
+import com.nuvio.tv.core.sync.stremio.StremioAccountSynchronizer
 import com.nuvio.tv.data.local.StremioSessionStore
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -17,7 +17,7 @@ class StremioAccountSettingsViewModel
     @Inject
     constructor(
         private val sessionStore: StremioSessionStore,
-        private val importer: StremioAddonImporter,
+        private val importer: StremioAccountSynchronizer,
     ) : ViewModel() {
         private val _uiState = MutableStateFlow(StremioAccountSettingsUiState())
         val uiState: StateFlow<StremioAccountSettingsUiState> = _uiState.asStateFlow()
@@ -47,7 +47,7 @@ class StremioAccountSettingsViewModel
                     .connectAndImport(email, password)
                     .onSuccess { result ->
                         _uiState.update {
-                            it.copy(status = StremioSyncStatus.Complete(result.importedAddons))
+                            it.copy(status = result.toCompleteStatus())
                         }
                     }.onFailure { error ->
                         _uiState.update {
@@ -65,7 +65,7 @@ class StremioAccountSettingsViewModel
                     .refresh()
                     .onSuccess { result ->
                         _uiState.update {
-                            it.copy(status = StremioSyncStatus.Complete(result.importedAddons))
+                            it.copy(status = result.toCompleteStatus())
                         }
                     }.onFailure { error ->
                         _uiState.update {
@@ -89,6 +89,13 @@ class StremioAccountSettingsViewModel
             }
         }
 
+        private fun com.nuvio.tv.core.sync.stremio.StremioAccountSyncResult.toCompleteStatus() =
+            StremioSyncStatus.Complete(
+                addonCount = addonCount,
+                libraryChanges = importedLibraryItems + removedLibraryItems + pushedLibraryChanges,
+                playbackItems = importedProgressItems + importedWatchedItems,
+            )
+
         private fun Throwable.userFacingMessage(): String = message?.takeIf { it.isNotBlank() } ?: "Stremio account request failed"
     }
 
@@ -104,7 +111,9 @@ sealed interface StremioSyncStatus {
     data object Working : StremioSyncStatus
 
     data class Complete(
-        val importedAddons: Int,
+        val addonCount: Int,
+        val libraryChanges: Int,
+        val playbackItems: Int,
     ) : StremioSyncStatus
 
     data class Error(

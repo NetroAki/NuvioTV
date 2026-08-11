@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This document maps the current Android client at upstream revision `f6e5048` and defines the integration seams for a private Rust companion server. It is deliberately incremental: existing Android behavior stays in place until a measured server-assisted path is proven faster and reliable.
+This document maps the Android client and records the boundary of the already-started private companion. Phase 1 is feature and correctness work in Kotlin/Compose/Media3. The companion is frozen unless a Phase-1 feature genuinely requires server processing; broader Rust adoption and offload decisions belong to Phase 2 and require measurements from the actual Chromecast.
 
 ## Existing Android architecture
 
@@ -43,13 +43,13 @@ MainActivity / Compose navigation
 - `AddonRepositoryImpl` preserves ordered configured URLs, enabled state, user display names, manifest metadata, resources, types, and catalogs.
 - Manifest fetches are concurrent and backed by memory plus SharedPreferences persistence.
 - `CatalogRepositoryImpl` builds Stremio-compatible catalog resource URLs dynamically from manifest declarations and extras.
-- The Android client currently performs this fan-out itself; slow-addon isolation exists in parts of the ViewModel layer but there is no shared server-side circuit breaker/cache.
+- The Android client remains authoritative for this fan-out. A persistent companion manifest cache exists from the earlier foundation milestone, but the Android app does not adopt it during Phase 1 merely as an optimization.
 
 ### Account state
 
-Nuvio account/Supabase sync remains intact alongside Trakt and Simkl. A separate Stremio account adapter now imports the authenticated user's ordered addon collection into the existing profile-scoped addon repository.
+Nuvio account/Supabase sync remains intact alongside Trakt and Simkl. A separate Stremio account adapter synchronizes the authenticated user's library, resume progress, watched state, and ordered addon collection with existing profile-scoped stores. Library reconciliation remembers the previous Stremio snapshot so later local and remote removals are not confused with first-time imports. Player pause/stop and watched-history writes update Stremio through the existing tracking dispatch path.
 
-Stremio login and addon collection calls run directly from Android through a dedicated TLS-verifying OkHttp client. They are intentionally not proxied through the companion: these calls are low-volume, while relaying credentials over another process would expand the secret-handling boundary without a performance benefit. The password is never persisted. The returned Stremio auth key and account email are encrypted together with an Android Keystore AES-GCM key and scoped to the active Nuvio profile.
+Stremio account calls run directly from Android through a dedicated TLS-verifying OkHttp client. They are intentionally not proxied through the companion: these calls are low-volume, while relaying credentials over another process would expand the secret-handling boundary without a measured benefit. The password is never persisted. The returned Stremio auth key and account email are encrypted together with an Android Keystore AES-GCM key and scoped to the active Nuvio profile.
 
 ### Playback
 
@@ -93,9 +93,9 @@ Potentially expensive visual/runtime features exist and require device profiling
 
 These counts identify profiling targets, not proven bottlenecks.
 
-## Server integration boundary
+## Deferred Phase-2 server boundary
 
-The Android app should depend on one narrow interface rather than Rust internals:
+If profiling later justifies broader server use, the Android app should depend on one narrow interface rather than Rust internals:
 
 ```text
 ServerGateway
@@ -113,7 +113,7 @@ ServerGateway
 
 Every response must carry an API version. Client fallback remains the existing direct Nuvio path when the server is unavailable or a feature is unsupported.
 
-## Planned Rust modules
+## Deferred Rust candidates
 
 ```text
 server/src/
@@ -135,7 +135,7 @@ server/src/
     preferences/    semantic preference hierarchy
 ```
 
-The first server milestone will implement only configuration, Tailscale-only binding, health/capability discovery, diagnostics, and tested wire contracts. Feature modules will be added as vertical slices rather than empty placeholder layers.
+The foundation and manifest-cache slices already exist and remain isolated. No additional module is implemented from this list until Phase 1 is feature-complete and target-device profiling identifies a concrete bottleneck or a feature requires server-only processing.
 
 ## Network and trust boundary
 
@@ -153,19 +153,7 @@ The first server milestone will implement only configuration, Tailscale-only bin
 
 ## Data freshness model
 
-```text
-Android memory cache
-        ↓
-Android disk snapshot
-        ↓
-Rust memory cache
-        ↓
-Rust SQLite/content cache
-        ↓
-upstream provider
-```
-
-Cache policy is per data class. Home/library/catalog/metadata use stale-while-revalidate; playback plans and probes use media identity/capability hashes; subtitle/font/segment results use content hashes. No universal TTL is planned.
+During Phase 1, existing Android memory/disk caches remain in place and upstream requests continue through the current repositories. A server cache or prefetch layer is introduced in Phase 2 only when server execution plus network cost beats local execution in target-device measurements. No universal TTL is planned.
 
 ## Performance gates
 

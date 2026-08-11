@@ -2,6 +2,10 @@ package com.nuvio.tv.core.di
 
 import com.nuvio.tv.BuildConfig
 import com.nuvio.tv.core.profile.ProfileScopedCredentialStore
+import com.nuvio.tv.core.sync.stremio.StremioTrackingHistoryWriter
+import com.nuvio.tv.core.sync.stremio.StremioTrackingProvider
+import com.nuvio.tv.core.tracking.TrackingHistoryWriter
+import com.nuvio.tv.core.tracking.TrackingProvider
 import com.nuvio.tv.data.local.StremioSessionStore
 import com.nuvio.tv.data.remote.api.StremioAccountApi
 import com.squareup.moshi.Moshi
@@ -66,4 +70,12 @@ object StremioAccountModule {
     @Provides
     @IntoSet
     fun provideStremioCredentialStore(store: StremioSessionStore): ProfileScopedCredentialStore = store
+
+    @Provides
+    @IntoSet
+    fun provideStremioTrackingProvider(provider: StremioTrackingProvider): TrackingProvider = provider
+
+    @Provides
+    @IntoSet
+    fun provideStremioHistoryWriter(writer: StremioTrackingHistoryWriter): TrackingHistoryWriter = writer
 }

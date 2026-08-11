@@ -6,10 +6,14 @@ import com.nuvio.tv.data.remote.dto.StremioAddonCollectionResultDto
 import com.nuvio.tv.data.remote.dto.StremioAddonDescriptorDto
 import com.nuvio.tv.data.remote.dto.StremioApiEnvelope
 import com.nuvio.tv.data.remote.dto.StremioApiErrorDto
+import com.nuvio.tv.data.remote.dto.StremioDatastoreGetRequest
+import com.nuvio.tv.data.remote.dto.StremioDatastorePutRequest
+import com.nuvio.tv.data.remote.dto.StremioLibraryItemDto
 import com.nuvio.tv.data.remote.dto.StremioLoginRequest
 import com.nuvio.tv.data.remote.dto.StremioLoginResultDto
 import com.nuvio.tv.data.remote.dto.StremioLogoutRequest
 import com.nuvio.tv.data.remote.dto.StremioLogoutResultDto
+import com.nuvio.tv.data.remote.dto.StremioSuccessDto
 import com.nuvio.tv.data.remote.dto.StremioUserDto
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -80,6 +84,42 @@ class StremioAccountClientTest {
         }
 
     @Test
+    fun `library datastore requests keep session and change details out of debug text`() =
+        runTest {
+            val item =
+                StremioLibraryItemDto(
+                    id = "tt1234567",
+                    name = "Example",
+                    type = "movie",
+                    modifiedAt = "2026-08-11T12:00:00Z",
+                )
+            val api = FakeStremioAccountApi(libraryItems = listOf(item))
+            val client = StremioAccountClient(api)
+
+            assertEquals(listOf(item), client.getLibraryItems("auth-key").getOrThrow())
+            client.putLibraryItems("auth-key", listOf(item)).getOrThrow()
+            assertFalse(api.datastoreGetRequest.toString().contains("auth-key"))
+            assertFalse(api.datastorePutRequest.toString().contains("auth-key"))
+            assertFalse(api.datastorePutRequest.toString().contains("tt1234567"))
+        }
+
+    @Test
+    fun `library write rejects an unsuccessful datastore response`() =
+        runTest {
+            val item =
+                StremioLibraryItemDto(
+                    id = "tt1234567",
+                    name = "Example",
+                    type = "movie",
+                    modifiedAt = "2026-08-11T12:00:00Z",
+                )
+            val result = StremioAccountClient(FakeStremioAccountApi(putSuccess = false)).putLibraryItems("auth-key", listOf(item))
+
+            assertTrue(result.isFailure)
+            assertEquals("Stremio rejected the library update", result.exceptionOrNull()?.message)
+        }
+
+    @Test
     fun `logout revokes the supplied session without exposing it`() =
         runTest {
             val api = FakeStremioAccountApi()
@@ -95,9 +135,13 @@ private class FakeStremioAccountApi(
     private val loginError: String? = null,
     private val addonUrls: List<String> = emptyList(),
     private val missingCollectionResult: Boolean = false,
+    private val libraryItems: List<StremioLibraryItemDto> = emptyList(),
+    private val putSuccess: Boolean = true,
 ) : StremioAccountApi {
     var loginRequest: StremioLoginRequest? = null
     var collectionRequest: StremioAddonCollectionRequest? = null
+    var datastoreGetRequest: StremioDatastoreGetRequest? = null
+    var datastorePutRequest: StremioDatastorePutRequest? = null
     var logoutRequest: StremioLogoutRequest? = null
 
     override suspend fun login(request: StremioLoginRequest): StremioApiEnvelope<StremioLoginResultDto> {
@@ -124,6 +168,16 @@ private class FakeStremioAccountApi(
                     addons = addonUrls.map(::StremioAddonDescriptorDto),
                 ),
         )
+    }
+
+    override suspend fun getLibraryItems(request: StremioDatastoreGetRequest): StremioApiEnvelope<List<StremioLibraryItemDto>> {
+        datastoreGetRequest = request
+        return StremioApiEnvelope(result = libraryItems)
+    }
+
+    override suspend fun putLibraryItems(request: StremioDatastorePutRequest): StremioApiEnvelope<StremioSuccessDto> {
+        datastorePutRequest = request
+        return StremioApiEnvelope(result = StremioSuccessDto(success = putSuccess))
     }
 
     override suspend fun logout(request: StremioLogoutRequest): StremioApiEnvelope<StremioLogoutResultDto> {

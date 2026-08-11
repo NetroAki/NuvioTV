@@ -17,6 +17,7 @@ import com.nuvio.tv.core.tracking.TrackingHistoryWriterRegistry
 import com.nuvio.tv.core.tracking.TrackingMediaReference
 import com.nuvio.tv.core.tracking.TrackingProgressProvider
 import com.nuvio.tv.core.tracking.TrackingProgressProviderRegistry
+import com.nuvio.tv.core.tracking.TrackingProviderRegistry
 import com.nuvio.tv.core.tracking.mergeProgressProjectionWithRetainedLocal
 import com.nuvio.tv.core.tracking.mergeWatchedEpisodeProjection
 import com.nuvio.tv.core.tracking.TrackingProviderId
@@ -73,6 +74,7 @@ class WatchProgressRepositoryImpl @Inject constructor(
     private val tmdbService: TmdbService,
     private val profileManager: com.nuvio.tv.core.profile.ProfileManager,
     private val trackingProgressProviders: TrackingProgressProviderRegistry,
+    private val trackingProviderRegistry: TrackingProviderRegistry,
     private val trackingHistoryWriters: TrackingHistoryWriterRegistry,
 ) : WatchProgressRepository {
     companion object {
@@ -842,7 +844,7 @@ class WatchProgressRepositoryImpl @Inject constructor(
         items: Collection<TrackingHistoryItem>
     ) {
         if (items.isEmpty()) return
-        val connectedIds = connectedProgressProviders().mapTo(mutableSetOf()) { it.providerId }
+        val connectedIds = trackingProviderRegistry.connectedProviderIds()
         supervisorScope {
             trackingHistoryWriters.writers()
                 .filter { writer -> writer.providerId in connectedIds }
@@ -863,7 +865,7 @@ class WatchProgressRepositoryImpl @Inject constructor(
         items: Collection<TrackingMediaReference>
     ) {
         if (items.isEmpty()) return
-        val connectedIds = connectedProgressProviders().mapTo(mutableSetOf()) { it.providerId }
+        val connectedIds = trackingProviderRegistry.connectedProviderIds()
         supervisorScope {
             trackingHistoryWriters.writers()
                 .filter { writer -> writer.providerId in connectedIds }

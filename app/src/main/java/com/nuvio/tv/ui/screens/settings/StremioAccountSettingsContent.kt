@@ -44,7 +44,12 @@ internal fun StremioAccountSettingsContent(
             }
 
             is StremioSyncStatus.Complete -> {
-                stringResource(R.string.stremio_account_sync_complete, status.importedAddons)
+                stringResource(
+                    R.string.stremio_account_sync_complete,
+                    status.addonCount,
+                    status.libraryChanges,
+                    status.playbackItems,
+                )
             }
 
             is StremioSyncStatus.Error -> {

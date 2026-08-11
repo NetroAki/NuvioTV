@@ -3,6 +3,9 @@ package com.nuvio.tv.data.remote
 import com.nuvio.tv.data.remote.api.StremioAccountApi
 import com.nuvio.tv.data.remote.dto.StremioAddonCollectionRequest
 import com.nuvio.tv.data.remote.dto.StremioApiEnvelope
+import com.nuvio.tv.data.remote.dto.StremioDatastoreGetRequest
+import com.nuvio.tv.data.remote.dto.StremioDatastorePutRequest
+import com.nuvio.tv.data.remote.dto.StremioLibraryItemDto
 import com.nuvio.tv.data.remote.dto.StremioLoginRequest
 import com.nuvio.tv.data.remote.dto.StremioLogoutRequest
 import java.net.URI
@@ -49,6 +52,32 @@ class StremioAccountClient
                     .addons
                     .mapNotNull { descriptor -> descriptor.transportUrl?.validTransportUrlOrNull() }
                     .distinct()
+            }
+
+        suspend fun getLibraryItems(authKey: String): Result<List<StremioLibraryItemDto>> =
+            runCatching {
+                require(authKey.isNotBlank()) { "Stremio session is required" }
+                api
+                    .getLibraryItems(StremioDatastoreGetRequest(authKey = authKey))
+                    .resultOrThrow("Unable to sync the Stremio library")
+            }
+
+        suspend fun putLibraryItems(
+            authKey: String,
+            changes: List<StremioLibraryItemDto>,
+        ): Result<Unit> =
+            runCatching {
+                require(authKey.isNotBlank()) { "Stremio session is required" }
+                if (changes.isEmpty()) return@runCatching
+                val response =
+                    api
+                        .putLibraryItems(
+                            StremioDatastorePutRequest(
+                                authKey = authKey,
+                                changes = changes,
+                            ),
+                        ).resultOrThrow("Unable to update the Stremio library")
+                if (!response.success) throw StremioAccountException("Stremio rejected the library update")
             }
 
         suspend fun logout(authKey: String): Result<Unit> =

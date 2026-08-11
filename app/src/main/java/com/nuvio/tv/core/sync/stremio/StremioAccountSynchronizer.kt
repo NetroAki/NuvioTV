@@ -12,19 +12,21 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class StremioAddonImporter
+class StremioAccountSynchronizer
     @Inject
     constructor(
         private val accountClient: StremioAccountClient,
         private val sessionStore: StremioSessionStore,
         private val addonRepository: AddonRepositoryImpl,
+        private val librarySync: StremioLibrarySync,
+        private val playbackStateSync: StremioPlaybackStateSync,
     ) {
         private val syncMutex = Mutex()
 
         suspend fun connectAndImport(
             email: String,
             password: String,
-        ): Result<StremioAddonImportResult> =
+        ): Result<StremioAccountSyncResult> =
             syncMutex.withLock {
                 runCatching {
                     val scope = sessionStore.currentScope()
@@ -35,7 +37,7 @@ class StremioAddonImporter
                 }
             }
 
-        suspend fun refresh(): Result<StremioAddonImportResult> =
+        suspend fun refresh(): Result<StremioAccountSyncResult> =
             syncMutex.withLock {
                 runCatching {
                     val scope = sessionStore.currentScope()
@@ -60,14 +62,25 @@ class StremioAddonImporter
         private suspend fun import(
             session: StremioSession,
             scope: StremioSessionScope,
-        ): StremioAddonImportResult {
+        ): StremioAccountSyncResult {
             val urls = accountClient.getAddonUrls(session.authKey).getOrThrow()
+            val remoteLibrary = accountClient.getLibraryItems(session.authKey).getOrThrow()
             ensureCurrent(scope)
             addonRepository.reconcileWithRemoteAddonUrls(
                 remoteUrls = urls,
                 removeMissingLocal = true,
             )
-            return StremioAddonImportResult(email = session.email, importedAddons = urls.size)
+            val libraryResult = librarySync.reconcile(session.authKey, scope, remoteLibrary)
+            val playbackResult = playbackStateSync.import(scope, remoteLibrary)
+            return StremioAccountSyncResult(
+                email = session.email,
+                addonCount = urls.size,
+                importedLibraryItems = libraryResult.importedItems,
+                removedLibraryItems = libraryResult.removedItems,
+                pushedLibraryChanges = libraryResult.pushedChanges,
+                importedProgressItems = playbackResult.importedProgress,
+                importedWatchedItems = playbackResult.importedWatchedItems,
+            )
         }
 
         private fun ensureCurrent(scope: StremioSessionScope) {
