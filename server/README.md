@@ -1,8 +1,8 @@
 # Nuvio companion server
 
-Private Rust backend for server-assisted NuvioTV. This first milestone provides the secure runtime foundation: dynamic tailnet binding, versioned APIs, runtime media-tool discovery, bounded requests, local diagnostics, and optional bearer-token defense in depth.
+Private Rust backend for server-assisted NuvioTV. It provides dynamic tailnet binding, versioned APIs, runtime media-tool discovery, bounded requests, local diagnostics, persistent addon-manifest caching, and optional bearer-token defense in depth.
 
-It does not yet proxy addons, sync Stremio accounts, or alter playback.
+It does not receive Stremio account credentials or alter playback. Account login stays on Android; the companion accepts only the configured addon URLs selected for manifest offload.
 
 ## Build and test
 
@@ -53,7 +53,7 @@ cp config.example.toml server.toml
 docker compose -f compose.example.yaml up -d --build
 ```
 
-The example publishes no Docker ports, drops Linux capabilities, uses a read-only root filesystem, and binds only inside the process after validating the address as tailnet-owned.
+The example publishes no Docker ports, drops Linux capabilities, uses a read-only root filesystem, and binds only inside the process after validating the address as tailnet-owned. A named volume mounted at `/app/data` is the sole writable location and persists the SQLite cache.
 
 ## API v1
 
@@ -71,6 +71,9 @@ Endpoints:
 - `GET /v1/health`
 - `GET /v1/capabilities`
 - `GET /v1/diagnostics`
+- `POST /v1/addons/manifests`
+
+The manifest endpoint preserves request order, caches by SHA-256 URL identity without storing raw addon URLs, and never echoes configured URLs. It rejects private-network targets and enforces batch/body/manifest limits.
 
 Capabilities are discovered at process startup. FFmpeg hardware accelerators are obtained from the installed FFmpeg build instead of being assumed from a device/server model.
 

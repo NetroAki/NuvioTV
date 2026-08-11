@@ -32,7 +32,7 @@ cp config.example.toml server.toml
 docker compose -f compose.example.yaml up -d --build
 ```
 
-The compose example deliberately uses host networking and publishes no ports. Host networking makes `tailscale0` visible to the container; the application still binds only to the validated tailnet address. The container runs as UID 10001, drops all capabilities, and uses a read-only root filesystem.
+The compose example deliberately uses host networking and publishes no ports. Host networking makes `tailscale0` visible to the container; the application still binds only to the validated tailnet address. The container runs as UID 10001, drops all capabilities, and uses a read-only root filesystem. Only the named `/app/data` volume is writable; it holds the SQLite addon cache.
 
 Do not replace this with `ports: ["8765:8765"]`: Docker port publication can create wildcard/LAN firewall rules even when the application design intends tailnet-only access.
 

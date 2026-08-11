@@ -10,6 +10,12 @@ port = 8765
 max_request_body_bytes = 1048576
 request_timeout_seconds = 15
 
+[addons]
+cache_path = "data/addon-cache.sqlite3"
+manifest_ttl_seconds = 21600
+max_manifest_bytes = 262144
+max_addons_per_request = 32
+
 [auth]
 # Optional defense in depth. The token itself stays in the environment.
 # token_env = "NUVIO_SERVER_TOKEN"

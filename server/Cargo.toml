@@ -7,9 +7,13 @@ description = "Private server-side acceleration for NuvioTV"
 
 [dependencies]
 axum = "0.8.4"
+futures-util = "=0.3.31"
 if-addrs = "0.14.0"
+reqwest = { version = "0.12.23", default-features = false, features = ["json", "rustls-tls"] }
+rusqlite = { version = "0.37.0", features = ["bundled"] }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.142"
+sha2 = "0.10.9"
 thiserror = "2.0.12"
 tokio = { version = "1.47.1", features = ["macros", "net", "process", "rt-multi-thread", "signal", "time"] }
 toml = "0.9.5"

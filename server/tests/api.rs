@@ -1,8 +1,12 @@
 use std::sync::Arc;
 
-use axum::{body::Body, http::Request};
+use axum::{
+    body::Body,
+    http::{Request, StatusCode},
+};
 use http_body_util::BodyExt;
 use nuvio_companion::{
+    addons::AddonManifestResolver,
     api::{AppState, router},
     capabilities::{
         MediaCapabilities, ServerCapabilities, SystemCapabilities, TransportCapabilities,
@@ -29,6 +33,10 @@ fn test_state() -> AppState {
             },
         }),
         diagnostics: Arc::new(Diagnostics::new()),
+        addon_manifests: Arc::new(
+            AddonManifestResolver::open(":memory:".as_ref(), 3600, 256 * 1024).unwrap(),
+        ),
+        max_addons_per_request: 4,
     }
 }
 
@@ -62,5 +70,35 @@ async fn health_and_capabilities_are_versioned() {
     assert_eq!(
         capabilities_json["data"]["media"]["hardwareAccelerators"][0],
         "vaapi"
+    );
+}
+
+#[tokio::test]
+async fn manifest_endpoint_rejects_private_targets_without_echoing_urls() {
+    let app = router(&ServerConfig::default(), test_state()).unwrap();
+    let private_url = "http://100.105.18.59/config/private-token";
+    let request_body = serde_json::json!({
+        "addonUrls": [private_url],
+        "allowStale": true
+    });
+    let response = app
+        .oneshot(
+            Request::post("/v1/addons/manifests")
+                .header("content-type", "application/json")
+                .body(Body::from(request_body.to_string()))
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+    assert_eq!(response.status(), StatusCode::OK);
+
+    let bytes = response.into_body().collect().await.unwrap().to_bytes();
+    let body = std::str::from_utf8(&bytes).unwrap();
+    assert!(!body.contains(private_url));
+    let json: serde_json::Value = serde_json::from_slice(&bytes).unwrap();
+    assert_eq!(json["data"]["entries"][0]["state"], "failed");
+    assert_eq!(
+        json["data"]["entries"][0]["failure"]["code"],
+        "private_address"
     );
 }

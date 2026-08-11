@@ -39,6 +39,14 @@ pub enum ConfigError {
     InvalidRequestLimit,
     #[error("api.request_timeout_seconds must be greater than zero")]
     InvalidRequestTimeout,
+    #[error("addons.cache_path must not be empty")]
+    InvalidAddonCachePath,
+    #[error("addons.manifest_ttl_seconds must be greater than zero")]
+    InvalidManifestTtl,
+    #[error("addons.max_manifest_bytes must be greater than zero")]
+    InvalidManifestLimit,
+    #[error("addons.max_addons_per_request must be between 1 and 128")]
+    InvalidAddonBatchLimit,
     #[error("auth.token_env must not be blank")]
     InvalidTokenEnvironment,
     #[error("configured token environment variable {variable} is not set")]

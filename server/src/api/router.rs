@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use axum::{Router, http::StatusCode, middleware as axum_middleware, routing::get};
+use axum::{Router, http::StatusCode, middleware as axum_middleware, routing::get, routing::post};
 use tower_http::{limit::RequestBodyLimitLayer, timeout::TimeoutLayer};
 
 use crate::config::{ConfigError, ServerConfig};
@@ -12,6 +12,7 @@ pub fn router(config: &ServerConfig, state: AppState) -> Result<Router, ConfigEr
         .route("/v1/health", get(handlers::health))
         .route("/v1/capabilities", get(handlers::capabilities))
         .route("/v1/diagnostics", get(handlers::diagnostics))
+        .route("/v1/addons/manifests", post(handlers::addon_manifests))
         .with_state(state.clone())
         .layer(RequestBodyLimitLayer::new(
             config.api.max_request_body_bytes,

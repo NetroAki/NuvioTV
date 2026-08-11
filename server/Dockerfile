@@ -8,7 +8,10 @@ FROM debian:bookworm-slim
 RUN apt-get update \
     && apt-get install --no-install-recommends -y ca-certificates ffmpeg \
     && rm -rf /var/lib/apt/lists/* \
-    && useradd --create-home --uid 10001 nuvio
+    && useradd --create-home --uid 10001 nuvio \
+    && mkdir -p /app/data \
+    && chown -R nuvio:nuvio /app
+WORKDIR /app
 COPY --from=builder /build/target/release/nuvio-companion /usr/local/bin/nuvio-companion
 USER nuvio
 ENTRYPOINT ["/usr/local/bin/nuvio-companion"]

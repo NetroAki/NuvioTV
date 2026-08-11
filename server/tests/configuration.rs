@@ -1,4 +1,4 @@
-use nuvio_companion::config::{ApiConfig, AuthConfig, CONFIG_VERSION, ServerConfig};
+use nuvio_companion::config::{AddonsConfig, ApiConfig, AuthConfig, CONFIG_VERSION, ServerConfig};
 
 #[test]
 fn defaults_are_private_and_valid() {
@@ -7,6 +7,8 @@ fn defaults_are_private_and_valid() {
     assert_eq!(config.network.interface, "tailscale0");
     assert!(config.network.bind_ip.is_none());
     assert!(config.auth.token_env.is_none());
+    assert_eq!(config.addons.max_addons_per_request, 32);
+    assert_eq!(config.addons.max_manifest_bytes, 256 * 1024);
     config.validate().unwrap();
 }
 
@@ -46,4 +48,13 @@ fn validates_configuration_version_and_request_limits() {
         ..ServerConfig::default()
     };
     assert!(blank_token_env.validate().is_err());
+
+    let invalid_addon_limit = ServerConfig {
+        addons: AddonsConfig {
+            max_addons_per_request: 0,
+            ..AddonsConfig::default()
+        },
+        ..ServerConfig::default()
+    };
+    assert!(invalid_addon_limit.validate().is_err());
 }
