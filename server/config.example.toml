@@ -1,0 +1,15 @@
+version = 1
+
+[network]
+# The server discovers the assigned tailnet address at runtime.
+interface = "tailscale0"
+port = 8765
+# bind_ip = "100.x.y.z" # Optional; must belong to the interface and tailnet.
+
+[api]
+max_request_body_bytes = 1048576
+request_timeout_seconds = 15
+
+[auth]
+# Optional defense in depth. The token itself stays in the environment.
+# token_env = "NUVIO_SERVER_TOKEN"

@@ -58,5 +58,8 @@ bugs/
 avatars/
 logs
 AGENTS.md
-docs/
+docs/*
+!docs/server-assisted/
+!docs/server-assisted/**
 status-page/
+/server/target/

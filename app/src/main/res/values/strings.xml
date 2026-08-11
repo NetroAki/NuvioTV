@@ -2970,4 +2970,23 @@
     <string name="stream_test_video_bitrate">Average Video Bitrate: %1$s</string>
     <string name="stream_test_error_connection">Connection failed. The last played stream link may have expired or is unreachable. Please play the video again and retry.</string>
 
+    <!-- Private companion server -->
+    <string name="server_assist_title">Companion Server</string>
+    <string name="server_assist_subtitle">Use a private Tailscale server for caching, media analysis, and playback preparation.</string>
+    <string name="server_assist_configure">Server Endpoint</string>
+    <string name="server_assist_configure_subtitle">Tailscale IP or MagicDNS address; no public endpoint is permitted.</string>
+    <string name="server_assist_not_configured">Not configured</string>
+    <string name="server_assist_test">Test Connection</string>
+    <string name="server_assist_test_subtitle">Verify API compatibility and media tools.</string>
+    <string name="server_assist_disable">Disable Server Assistance</string>
+    <string name="server_assist_disable_subtitle">Keep using Nuvio directly on this device.</string>
+    <string name="server_assist_status_ready">Connected · server %1$s · %2$d CPUs</string>
+    <string name="server_assist_status_checking">Checking…</string>
+    <string name="server_assist_status_error">Unavailable: %1$s</string>
+    <string name="server_assist_status_disabled">Disabled</string>
+    <string name="server_assist_dialog_title">Companion Server Endpoint</string>
+    <string name="server_assist_dialog_subtitle">Enter an HTTP or HTTPS endpoint reachable only through Tailscale.</string>
+    <string name="server_assist_dialog_placeholder">http://100.x.y.z:8765</string>
+    <string name="server_assist_connect">Connect</string>
+
 </resources>
