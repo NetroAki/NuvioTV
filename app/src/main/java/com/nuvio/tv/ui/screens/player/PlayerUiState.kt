@@ -4,6 +4,7 @@ import androidx.media3.common.C
 import androidx.media3.common.TrackGroup
 import androidx.media3.ui.AspectRatioFrameLayout
 import com.nuvio.tv.core.streams.StreamBadgePlacement
+import com.nuvio.tv.data.local.AudioTrackPreferenceScope
 import com.nuvio.tv.data.local.FrameRateMatchingMode
 import com.nuvio.tv.data.local.InternalPlayerEngine
 import com.nuvio.tv.data.local.LibassRenderType
@@ -93,6 +94,7 @@ data class PlayerUiState(
     val audioTracks: List<TrackInfo> = emptyList(),
     val subtitleTracks: List<TrackInfo> = emptyList(),
     val selectedAudioTrackIndex: Int = -1,
+    val audioPreferenceScope: AudioTrackPreferenceScope = AudioTrackPreferenceScope.SERIES,
     val selectedSubtitleTrackIndex: Int = -1,
     val audioDelayMs: Int = 0,
     val audioAmplificationDb: Int = 0,
@@ -267,7 +269,10 @@ sealed class PlayerEvent {
     data class OnPreviewSeekBy(val deltaMs: Long) : PlayerEvent()
     data object OnCommitPreviewSeek : PlayerEvent()
     data class OnSeekTo(val position: Long) : PlayerEvent()
-    data class OnSelectAudioTrack(val index: Int) : PlayerEvent()
+    data class OnSelectAudioTrack(
+        val index: Int,
+        val scope: AudioTrackPreferenceScope,
+    ) : PlayerEvent()
     data class OnSetAudioDelayMs(val delayMs: Int) : PlayerEvent()
     data class OnSetAudioAmplificationDb(val db: Int) : PlayerEvent()
     data class OnSetPersistAudioAmplification(val enabled: Boolean) : PlayerEvent()

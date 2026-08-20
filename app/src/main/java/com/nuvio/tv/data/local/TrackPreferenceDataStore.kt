@@ -11,7 +11,8 @@ import javax.inject.Singleton
 @Singleton
 class TrackPreferenceDataStore @Inject constructor(
     private val factory: ProfileDataStoreFactory,
-    private val profileManager: ProfileManager
+    private val profileManager: ProfileManager,
+    internal val audio: AudioTrackPreferenceDataStore,
 ) {
     companion object {
         private const val FEATURE = "track_preference"
@@ -40,7 +41,7 @@ class TrackPreferenceDataStore @Inject constructor(
     private fun intKey(field: String, id: String) =
         intPreferencesKey("$field|$id")
 
-    suspend fun save(contentId: String, pref: PersistedTrackPreference) {
+    suspend fun saveSubtitlePreference(contentId: String, pref: PersistedTrackPreference) {
         store().edit { prefs ->
             fun set(field: String, value: String?) {
                 val k = key(field, contentId)
@@ -54,9 +55,6 @@ class TrackPreferenceDataStore @Inject constructor(
             set(SUB_ADDON_ID, pref.addonSubtitleId)
             set(SUB_ADDON_URL, pref.addonSubtitleUrl)
             set(SUB_ADDON_NAME, pref.addonSubtitleAddonName)
-            set(AUDIO_LANG, pref.audioLanguage)
-            set(AUDIO_NAME, pref.audioName)
-            set(AUDIO_TRACK_ID, pref.audioTrackId)
         }
     }
 
@@ -104,53 +102,4 @@ class TrackPreferenceDataStore @Inject constructor(
     suspend fun loadSubtitleDelayMs(videoId: String): Int? {
         return store().data.first()[intKey(SUB_DELAY_MS, videoId)]
     }
-}
-
-data class PersistedTrackPreference(
-    val subtitleType: String?,
-    val subtitleLanguage: String?,
-    val subtitleName: String?,
-    val subtitleTrackId: String?,
-    val subtitleIsForced: Boolean? = null,
-    val addonSubtitleId: String?,
-    val addonSubtitleUrl: String?,
-    val addonSubtitleAddonName: String?,
-    val audioLanguage: String?,
-    val audioName: String?,
-    val audioTrackId: String?
-)
-
-internal fun PersistedTrackPreference.toTrackPreference(): com.nuvio.tv.ui.screens.player.PlayerRuntimeController.TrackPreference? {
-    val audio = if (audioLanguage != null || audioName != null || audioTrackId != null) {
-        com.nuvio.tv.ui.screens.player.PlayerRuntimeController.RememberedTrackSelection(
-            language = audioLanguage,
-            name = audioName,
-            trackId = audioTrackId
-        )
-    } else null
-
-    val subtitle = when (subtitleType) {
-        "INTERNAL" -> com.nuvio.tv.ui.screens.player.PlayerRuntimeController.RememberedSubtitleSelection.Internal(
-            track = com.nuvio.tv.ui.screens.player.PlayerRuntimeController.RememberedTrackSelection(
-                language = subtitleLanguage,
-                name = subtitleName,
-                trackId = subtitleTrackId,
-                isForcedHint = subtitleIsForced
-            )
-        )
-        "ADDON" -> com.nuvio.tv.ui.screens.player.PlayerRuntimeController.RememberedSubtitleSelection.Addon(
-            id = addonSubtitleId ?: "",
-            url = addonSubtitleUrl ?: "",
-            language = subtitleLanguage ?: "",
-            addonName = addonSubtitleAddonName ?: ""
-        )
-        "DISABLED" -> com.nuvio.tv.ui.screens.player.PlayerRuntimeController.RememberedSubtitleSelection.Disabled
-        else -> null
-    }
-
-    if (audio == null && subtitle == null) return null
-    return com.nuvio.tv.ui.screens.player.PlayerRuntimeController.TrackPreference(
-        audio = audio,
-        subtitle = subtitle
-    )
 }

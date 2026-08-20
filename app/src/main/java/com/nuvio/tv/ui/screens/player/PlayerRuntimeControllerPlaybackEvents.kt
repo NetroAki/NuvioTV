@@ -1193,9 +1193,9 @@ fun PlayerRuntimeController.onEvent(event: PlayerEvent) {
         is PlayerEvent.OnSelectAudioTrack -> {
             logSwitchTrace(
                 stage = "event-select-audio",
-                message = "index=${event.index}"
+                message = "index=${event.index} scope=${event.scope}"
             )
-            rememberAudioSelection(event.index)
+            rememberAudioSelection(event.index, event.scope)
             selectAudioTrack(event.index)
             _uiState.update {
                 it.copy(

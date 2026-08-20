@@ -1321,30 +1321,10 @@ fun PlayerScreen(
             }
         }
 
-        // Audio track dialog
-        AudioSelectionOverlay(
-            visible = uiState.showAudioOverlay,
-            tracks = uiState.audioTracks,
-            selectedIndex = uiState.selectedAudioTrackIndex,
-            audioDelayMs = uiState.audioDelayMs,
-            audioAmplificationDb = uiState.audioAmplificationDb,
-            isAmplificationAvailable = uiState.isAudioAmplificationAvailable,
-            persistAmplification = uiState.persistAudioAmplification,
-            centerMixLevelDb = uiState.centerMixLevelDb,
-            isCenterMixAvailable = uiState.isCenterMixAvailable,
-            onTrackSelected = { viewModel.onEvent(PlayerEvent.OnSelectAudioTrack(it)) },
-            onAudioDelayChange = { viewModel.onEvent(PlayerEvent.OnSetAudioDelayMs(it)) },
-            onAmplificationChange = { viewModel.onEvent(PlayerEvent.OnSetAudioAmplificationDb(it)) },
-            onPersistAmplificationChange = {
-                viewModel.onEvent(PlayerEvent.OnSetPersistAudioAmplification(it))
-            },
-            onCenterMixLevelChange = {
-                viewModel.onEvent(PlayerEvent.OnSetCenterMixLevelDb(it))
-            },
-            onDismiss = { viewModel.onEvent(PlayerEvent.OnDismissTransientOverlay) },
-            modifier = Modifier
-                .fillMaxSize()
-                .zIndex(2.6f)
+        PlayerAudioOverlay(
+            uiState = uiState,
+            onEvent = viewModel::onEvent,
+            modifier = Modifier.fillMaxSize().zIndex(2.6f),
         )
 
         SubtitleSelectionOverlay(

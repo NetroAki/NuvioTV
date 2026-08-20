@@ -1273,7 +1273,7 @@ internal fun PlayerRuntimeController.switchToEpisodeStream(
     )
     val playbackUrl = currentStreamUrl
     val playbackHeaders = currentHeaders
-    persistedTrackPreference = null
+    resetTrackPreferencesForEpisodeChange()
     subtitleDisabledByPersistedPreference = false
     subtitleAddonRestoredByPersistedPreference = false
     pendingRestoredAddonSubtitle = null
@@ -1380,7 +1380,7 @@ private fun PlayerRuntimeController.switchToEpisodeStreamCommon(
     applyStreamMetadata(stream)
     currentFilename = stream.behaviorHints?.filename ?: navigationArgs.filename
 
-    persistedTrackPreference = null
+    resetTrackPreferencesForEpisodeChange()
     subtitleDisabledByPersistedPreference = false
     subtitleAddonRestoredByPersistedPreference = false
     pendingRestoredAddonSubtitle = null

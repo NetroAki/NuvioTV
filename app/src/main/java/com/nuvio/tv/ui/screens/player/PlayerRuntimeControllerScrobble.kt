@@ -5,7 +5,6 @@ import android.util.Log
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
-import com.nuvio.tv.data.local.toTrackPreference
 
 internal fun PlayerRuntimeController.preparePlaybackBeforeStart(
     url: String,
@@ -51,7 +50,8 @@ internal fun PlayerRuntimeController.preparePlaybackBeforeStart(
         refreshScrobbleItem()
         if (persistedTrackPreference == null) {
             contentId?.let { id ->
-                val loaded = trackPreferenceDataStore.load(id)?.toTrackPreference()
+                val loadedPreference = loadTrackPreferenceForPlayback(id)
+                val loaded = loadedPreference.preference
                 logSwitchTrace(
                     stage = "track-pref-load",
                     message = "contentId=$id loadedAudio=${loaded?.audio?.language}/${loaded?.audio?.name} " +
@@ -64,6 +64,7 @@ internal fun PlayerRuntimeController.preparePlaybackBeforeStart(
                 )
                 persistedTrackPreference = loaded
                 hasExplicitAudioPreferenceForPlayback = loaded?.audio != null
+                _uiState.update { it.copy(audioPreferenceScope = loadedPreference.audioScope) }
             } ?: Log.d(PlayerRuntimeController.TAG, "TRACK_PREF load: skipped (contentId is null)")
             // Subtitle delay is keyed per-videoId, so it is loaded separately
             // from the track selection above. This happens before

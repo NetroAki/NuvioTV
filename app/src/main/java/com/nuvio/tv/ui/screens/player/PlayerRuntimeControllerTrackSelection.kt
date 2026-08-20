@@ -84,28 +84,6 @@ internal fun PlayerRuntimeController.selectAudioTrack(trackIndex: Int) {
     }
 }
 
-internal fun PlayerRuntimeController.rememberAudioSelection(trackIndex: Int) {
-    val selectedTrack = _uiState.value.audioTracks.getOrNull(trackIndex) ?: return
-    logSwitchTrace(
-        stage = "user-remember-audio",
-        message = "trackIndex=$trackIndex lang=${selectedTrack.language} name=${selectedTrack.name} id=${selectedTrack.trackId}"
-    )
-    val basePreference = currentTrackPreferenceForPersistence()
-    hasExplicitAudioPreferenceForPlayback = true
-    clearPendingEngineSwitchTrackPreference()
-    persistedTrackPreference = null
-    rememberedTrackPreference =
-        basePreference
-            .copy(
-                audio = PlayerRuntimeController.RememberedTrackSelection(
-                    language = selectedTrack.language,
-                    name = selectedTrack.name,
-                    trackId = null
-                )
-            )
-    persistTrackPreference()
-}
-
 internal fun PlayerRuntimeController.applyAddonSubtitleOverride(addonTrackId: String): Boolean {
     val player = _exoPlayer ?: return false
     player.currentTracks.groups.forEach { trackGroup ->
@@ -643,7 +621,7 @@ internal fun PlayerRuntimeController.rememberAddonSubtitleSelection(subtitle: Su
     persistTrackPreference()
 }
 
-private fun PlayerRuntimeController.currentTrackPreferenceForPersistence(): PlayerRuntimeController.TrackPreference {
+internal fun PlayerRuntimeController.currentTrackPreferenceForPersistence(): PlayerRuntimeController.TrackPreference {
     return rememberedTrackPreference ?: persistedTrackPreference ?: PlayerRuntimeController.TrackPreference()
 }
 
@@ -680,7 +658,7 @@ internal fun PlayerRuntimeController.persistTrackPreference() {
         // Audio IDs are container/engine-local and are not stable across episodes.
         audioTrackId = null
     )
-    scope.launch { trackPreferenceDataStore.save(id, persisted) }
+    scope.launch { trackPreferenceDataStore.saveSubtitlePreference(id, persisted) }
     // Subtitle delay is keyed per-videoId (not per-contentId) because a delay
     // calibrated against one episode release rarely applies to the next
     // episode. Scoping it to the exact video prevents cross-episode leakage.

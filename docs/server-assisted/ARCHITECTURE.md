@@ -61,8 +61,9 @@ Stremio account calls run directly from Android through a dedicated TLS-verifyin
 
 ### Audio and subtitles
 
-- Track preferences persist language/name plus track IDs. Semantic fields exist, but persisted IDs remain part of selection and the preference hierarchy is not yet modeled as episode → series → profile → inference → scorer.
-- Media3 handles normal subtitle paths. There is no libass client renderer, embedded-font transfer protocol, structural subtitle classifier, ASS merge engine, or collision layout engine.
+- Audio selection is semantic on both Media3 and MPV: profile language settings and content-original language feed a deterministic scorer that avoids commentary and audio-description tracks.
+- User audio choices persist language and label, never engine/container track IDs. Series content supports episode overrides over a series-wide preference; otherwise profile preferences and semantic inference select the track.
+- Subtitle preferences retain their existing implementation. Media3 handles normal subtitle paths; there is no server-side embedded-font transfer, structural subtitle classifier, ASS merge engine, or collision layout engine.
 
 ### Segments
 
